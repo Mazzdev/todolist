@@ -46,9 +46,7 @@ class TodoViewModel : ViewModel() {
                     title = parts[1],
                     isDone = parts[2].toBoolean()
                 )
-            } else {
-                null
-            }
+            } else null
         }.sortedBy { it.id }
 
         nextId = (todoList.maxOfOrNull { it.id } ?: 0) + 1
@@ -98,11 +96,14 @@ class TodoViewModel : ViewModel() {
             try {
                 isLoading = true
                 errorMessage = ""
+                quoteText = ""
+                quoteAuthor = ""
 
                 val response = RetrofitInstance.api.getRandomQuote()
+                val quote = response.first()
 
-                quoteText = response.content
-                quoteAuthor = response.author
+                quoteText = quote.q
+                quoteAuthor = quote.a
             } catch (e: Exception) {
                 errorMessage = "Error while loading quote"
             } finally {
