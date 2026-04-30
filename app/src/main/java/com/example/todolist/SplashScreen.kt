@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 
 @Composable
@@ -45,9 +46,13 @@ fun SplashScreen() {
 
 @Composable
 fun LoginScreen() {
-    var isLoggedIn by remember { mutableStateOf(false) }
-    var isRegisterMode by remember { mutableStateOf(false) }
+    val auth = FirebaseAuth.getInstance()
 
+    var isLoggedIn by remember {
+        mutableStateOf(auth.currentUser != null)
+    }
+
+    var isRegisterMode by remember { mutableStateOf(false) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
@@ -94,13 +99,27 @@ fun LoginScreen() {
                 onClick = {
                     if (email.isBlank() || password.isBlank()) {
                         message = "Email and password cannot be empty"
+                        return@Button
+                    }
+
+                    if (isRegisterMode) {
+                        auth.createUserWithEmailAndPassword(email, password)
+                            .addOnSuccessListener {
+                                message = "Account created"
+                                isLoggedIn = true
+                            }
+                            .addOnFailureListener {
+                                message = it.message ?: "Register error"
+                            }
                     } else {
-                        message = if (isRegisterMode) {
-                            "Account created successfully"
-                        } else {
-                            "Login successful"
-                        }
-                        isLoggedIn = true
+                        auth.signInWithEmailAndPassword(email, password)
+                            .addOnSuccessListener {
+                                message = "Login successful"
+                                isLoggedIn = true
+                            }
+                            .addOnFailureListener {
+                                message = it.message ?: "Login error"
+                            }
                     }
                 }
             ) {
